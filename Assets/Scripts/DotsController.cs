@@ -109,7 +109,7 @@ public class DotsController : MonoBehaviour
         {
             gameData.Score = PlayerPrefs.GetInt("score");
             gameData.Turns = PlayerPrefs.GetInt("turns");
-
+            
             GetColor = (int x, int y) =>
             {
                 if (PlayerPrefs.HasKey($"{x}:{y} R") && PlayerPrefs.HasKey($"{x}:{y} G") && PlayerPrefs.HasKey($"{x}:{y} G"))
@@ -120,10 +120,11 @@ public class DotsController : MonoBehaviour
         else
         {
             gameData.Score = 0;
-            gameData.Turns = gameData.defaultTurns;
             GetColor = (int x, int y) => { return colors[UnityEngine.Random.Range(0, colors.Length)]; };
         }
         gameData.BestScore = PlayerPrefs.GetInt("bestScore", 0);
+        if (gameData.Turns <= 0)
+            gameData.Turns = gameData.defaultTurns;
 
         grid.Positions.Foreach(PlaceDot);
         void PlaceDot(int x, int y, Vector3 position)
@@ -287,9 +288,21 @@ public class DotsController : MonoBehaviour
         yield return StartCoroutine(WaitForDotsAnimation());
     }
 
-    protected void OnDestroy()
+    protected void OnApplicationPause(bool pause)
+    {
+        if (pause)
+            SaveSessionData();
+    }
+
+    protected void OnApplicationQuit()
     {
         SaveSessionData();
+    }
+
+    private void OnApplicationFocus(bool focus)
+    {
+        if (!focus)
+            SaveSessionData();
     }
 
     void SaveSessionData()
